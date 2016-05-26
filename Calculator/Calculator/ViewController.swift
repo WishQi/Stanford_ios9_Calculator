@@ -55,14 +55,13 @@ class ViewController: UIViewController {
             brain.performOperation(mathematicalSymbol)
         }
         
+        displayValue = brain.result
+        
         if brain.isPartialResult {
             discription.text = brain.discription + "..."
         } else {
             discription.text = brain.discription + "="
         }
-        
-        displayValue = brain.result
-        
     }
 
 }

@@ -15,7 +15,15 @@ class CalculatorBrain {
     
     var discription = ""
     
-    var isPartialResult = true
+    var isPartialResult: Bool {
+        get {
+            if pending != nil {
+                return true
+            } else {
+                return false
+            }
+        }
+    }
     
     private enum Operation {
         case Constant(Double)
@@ -42,24 +50,28 @@ class CalculatorBrain {
     
     func setOperand(operand: Double) {
         accumulator = operand
-        discription = discription + String(operand)
-        print(discription)
+        if isPartialResult {
+            discription = discription + String(accumulator)
+        } else {
+            discription = String(operand)
+        }
     }
     
     func performOperation(symbol: String) {
-        if symbol != "=" {
-            discription = discription + symbol
-            print(discription)
-        } else {
-            discription = ""
-        }
         if let operation = operations[symbol] {
             switch operation {
             case .Constant(let value):
+                discription = discription + symbol
                 accumulator = value
             case .UnaryOperation(let function):
+                if isPartialResult {
+                    discription = discription + symbol
+                } else {
+                    discription = symbol + "(" + discription + ")"
+                }
                 accumulator = function(accumulator)
             case .BinaryOperation(let function):
+                discription = discription + symbol
                 executePendingBinaryOperation()
                 pending = pendingBinaryFunctionInfo(binaryFunction: function, firstOperand: accumulator)
             case .Equals:
