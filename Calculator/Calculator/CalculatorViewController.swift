@@ -8,12 +8,20 @@
 
 import UIKit
 
-class ViewController: UIViewController {
+class CalculatorViewController: UIViewController {
 
     @IBOutlet private weak var display: UILabel!
-    @IBOutlet weak var discription: UILabel!
+    @IBOutlet weak var history: UILabel!
     
-    private var userIsInTheMiddleOfTyping: Bool = false
+    private var userIsInTheMiddleOfTyping: Bool = false {
+        didSet {
+            if !userIsInTheMiddleOfTyping {
+                userIsInTheMiddleOfFloatingPointNumber = false
+            }
+        }
+    }
+    
+    var userIsInTheMiddleOfFloatingPointNumber = false
     
     private var brain = CalculatorBrain()
     
@@ -23,20 +31,26 @@ class ViewController: UIViewController {
         }
         set {
             display.text = String(newValue)
+            history.text = brain.description + (brain.isPartialResult ? " ⋯" : " =")
         }
     }
     
     @IBAction private func touchDigit(sender: UIButton) {
-        let digit = sender.currentTitle!
+        var digit = sender.currentTitle!
+        
+        if digit == "." {
+            if userIsInTheMiddleOfFloatingPointNumber {
+                return
+            }
+            if !userIsInTheMiddleOfTyping {
+                digit = "0."
+            }
+            userIsInTheMiddleOfFloatingPointNumber = true
+        }
+        
         if userIsInTheMiddleOfTyping {
             let textCurrentlyInDisplay = display.text!
-            if digit == "." {
-                if textCurrentlyInDisplay.rangeOfString(".") == nil {
-                    display!.text = textCurrentlyInDisplay + digit
-                }
-            } else {
-                display!.text = textCurrentlyInDisplay + digit
-            }
+            display!.text = textCurrentlyInDisplay + digit
         } else {
             display.text = digit
         }
@@ -57,11 +71,6 @@ class ViewController: UIViewController {
         
         displayValue = brain.result
         
-        if brain.isPartialResult {
-            discription.text = brain.discription + "..."
-        } else {
-            discription.text = brain.discription + "="
-        }
     }
 
 }

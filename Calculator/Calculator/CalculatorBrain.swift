@@ -13,67 +13,87 @@ class CalculatorBrain {
     
     private var accumulator = 0.0
     
-    var discription = ""
+    var description: String {
+        get {
+            if pending == nil {
+                return descriptionAccumulator
+            } else {
+                return pending!.descriptionFunction(pending!.descriptionOperand, pending!.descriptionOperand != descriptionAccumulator ? descriptionAccumulator : "")
+            }
+        }
+    }
+    
+    var descriptionAccumulator = "0" {
+        didSet {
+            if pending == nil {
+                currentPrecedence = Int.max
+            }
+        }
+    }
+    
+    var currentPrecedence = Int.max
     
     var isPartialResult: Bool {
         get {
-            if pending != nil {
-                return true
-            } else {
-                return false
-            }
+            return pending != nil
         }
     }
     
     private enum Operation {
         case Constant(Double)
-        case UnaryOperation((Double) -> Double)
-        case BinaryOperation((Double, Double) -> Double)
+        case UnaryOperation((Double) -> Double, (String) -> String)
+        case BinaryOperation((Double, Double) -> Double, (String, String) -> String, Int)
         case Equals
     }
     
     private var operations: Dictionary<String, Operation> = [
-        "π": Operation.Constant(M_PI),
-        "e": Operation.Constant(M_E),
-        "%": Operation.UnaryOperation({ $0/100 }),
-        "√": Operation.UnaryOperation(sqrt),
-        "ln": Operation.UnaryOperation(log),
-        "sin": Operation.UnaryOperation(sin),
-        "cos": Operation.UnaryOperation(cos),
-        "tan": Operation.UnaryOperation(tan),
-        "+": Operation.BinaryOperation({ $0 + $1 }),
-        "−": Operation.BinaryOperation({ $0 - $1 }),
-        "×": Operation.BinaryOperation({ $0 * $1 }),
-        "÷": Operation.BinaryOperation({ $0 / $1 }),
+        "π": Operation.Constant( M_PI ),
+        "e": Operation.Constant( M_E ),
+        "√": Operation.UnaryOperation( sqrt, {"√(" + $0 + ")"} ),
+        "±": Operation.UnaryOperation({ -$0 }, {"-" + $0}),
+        "ln": Operation.UnaryOperation( log, {"ln(" + $0 + ")"} ),
+        "log": Operation.UnaryOperation( log10, {"log(" + $0 + ")"} ),
+        "sin": Operation.UnaryOperation( sin, {"sin(" + $0 + ")"} ),
+        "cos": Operation.UnaryOperation( cos, {"cos(" + $0 + ")"} ),
+        "tan": Operation.UnaryOperation( tan, {"tan(" + $0 + ")"} ),
+        "sinh": Operation.UnaryOperation( sinh, {"sinh(" + $0 + ")"} ),
+        "cosh": Operation.UnaryOperation( cosh, {"cosh(" + $0 + ")"} ),
+        "tanh": Operation.UnaryOperation( tanh, {"tanh(" + $0 + ")"} ),
+        "x²": Operation.UnaryOperation( {pow($0, 2)}, {"(" + $0 + ")²"} ),
+        "x³": Operation.UnaryOperation( {pow($0, 3)}, {"(" + $0 + ")³"} ),
+        "10ˣ": Operation.UnaryOperation( {pow(10, $0)}, {"10^(" + $0 + ")"} ),
+        "eˣ": Operation.UnaryOperation( exp, {"e^(" + $0 + ")"} ),
+        "x⁻¹": Operation.UnaryOperation( {pow($0, -1)}, {"(" + $0 + ")⁻¹"}),
+        "x!": Operation.UnaryOperation( fractorial, {"(" + $0 + ")!"} ),
+        "xʸ": Operation.BinaryOperation( {pow($0, $1)}, {$0 + "^" + $1}, 2),
+        "+": Operation.BinaryOperation( +, {$0 + "+" + $1}, 0 ),
+        "−": Operation.BinaryOperation( -, {$0 + "-" + $1}, 0 ),
+        "×": Operation.BinaryOperation( *, {$0 + "×" + $1}, 1 ),
+        "÷": Operation.BinaryOperation( /, {$0 + "÷" + $1}, 1 ),
         "=": Operation.Equals
     ]
     
     func setOperand(operand: Double) {
         accumulator = operand
-        if isPartialResult {
-            discription = discription + String(accumulator)
-        } else {
-            discription = String(operand)
-        }
+        descriptionAccumulator = String(operand)
     }
     
     func performOperation(symbol: String) {
         if let operation = operations[symbol] {
             switch operation {
             case .Constant(let value):
-                discription = discription + symbol
                 accumulator = value
-            case .UnaryOperation(let function):
-                if isPartialResult {
-                    discription = discription + symbol
-                } else {
-                    discription = symbol + "(" + discription + ")"
-                }
+                descriptionAccumulator = symbol
+            case .UnaryOperation(let function, let descriptionFunction):
                 accumulator = function(accumulator)
-            case .BinaryOperation(let function):
-                discription = discription + symbol
+                descriptionAccumulator = descriptionFunction(descriptionAccumulator)
+            case .BinaryOperation(let function, let descriptionFunction, let precedence):
                 executePendingBinaryOperation()
-                pending = pendingBinaryFunctionInfo(binaryFunction: function, firstOperand: accumulator)
+                if currentPrecedence < precedence {
+                    descriptionAccumulator = "(" + descriptionAccumulator + ")"
+                }
+                currentPrecedence = precedence
+                pending = pendingBinaryFunctionInfo(binaryFunction: function, firstOperand: accumulator, descriptionFunction: descriptionFunction, descriptionOperand: descriptionAccumulator)
             case .Equals:
                 executePendingBinaryOperation()
             }
@@ -83,6 +103,8 @@ class CalculatorBrain {
     private struct pendingBinaryFunctionInfo {
         var binaryFunction: (Double, Double) -> Double
         var firstOperand: Double
+        var descriptionFunction: (String, String) -> String
+        var descriptionOperand: String
     }
     
     private var pending: pendingBinaryFunctionInfo?
@@ -90,6 +112,7 @@ class CalculatorBrain {
     private func executePendingBinaryOperation() {
         if pending != nil {
             accumulator = pending!.binaryFunction(pending!.firstOperand, accumulator)
+            descriptionAccumulator = pending!.descriptionFunction(pending!.descriptionOperand, descriptionAccumulator)
             pending = nil
         }
     }
@@ -100,4 +123,11 @@ class CalculatorBrain {
         }
     }
     
+}
+
+func fractorial(operand: Double) -> Double {
+    if operand <= 1 {
+        return 1
+    }
+    return operand * fractorial(operand - 1)
 }
