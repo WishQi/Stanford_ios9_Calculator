@@ -9,9 +9,26 @@
 import Foundation
 
 
+func fractorial(operand: Double) -> Double {
+    if operand <= 1 {
+        return 1
+    }
+    return operand * fractorial(operand - 1)
+}
+
 class CalculatorBrain {
     
     private var accumulator = 0.0
+    
+    private var descriptionAccumulator = "0" {
+        didSet {
+            if pending == nil {
+                currentPrecedence = Int.max
+            }
+        }
+    }
+    
+    private var currentPrecedence = Int.max
     
     var description: String {
         get {
@@ -22,16 +39,6 @@ class CalculatorBrain {
             }
         }
     }
-    
-    var descriptionAccumulator = "0" {
-        didSet {
-            if pending == nil {
-                currentPrecedence = Int.max
-            }
-        }
-    }
-    
-    var currentPrecedence = Int.max
     
     var isPartialResult: Bool {
         get {
@@ -100,6 +107,12 @@ class CalculatorBrain {
         }
     }
     
+    func clear() {
+        pending = nil
+        accumulator = 0.0
+        descriptionAccumulator = "0"
+    }
+    
     private struct pendingBinaryFunctionInfo {
         var binaryFunction: (Double, Double) -> Double
         var firstOperand: Double
@@ -123,11 +136,4 @@ class CalculatorBrain {
         }
     }
     
-}
-
-func fractorial(operand: Double) -> Double {
-    if operand <= 1 {
-        return 1
-    }
-    return operand * fractorial(operand - 1)
 }

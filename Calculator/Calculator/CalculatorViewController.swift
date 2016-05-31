@@ -57,6 +57,12 @@ class CalculatorViewController: UIViewController {
         
         userIsInTheMiddleOfTyping = true
     }
+    @IBAction func clear(sender: UIButton) {
+        brain.clear()
+        display.text = "0"
+        history.text = "⋯"
+        userIsInTheMiddleOfTyping = false
+    }
 
     @IBAction private func performOperation(sender: UIButton) {
         
