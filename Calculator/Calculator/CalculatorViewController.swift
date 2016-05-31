@@ -27,10 +27,13 @@ class CalculatorViewController: UIViewController {
     
     private var displayValue: Double {
         get {
-            return Double(display.text!)!
+            return NSNumberFormatter().numberFromString(display.text!)!.doubleValue
         }
         set {
-            display.text = String(newValue)
+            let formatter = NSNumberFormatter()
+            formatter.numberStyle = .DecimalStyle
+            formatter.maximumFractionDigits = 6
+            display.text = formatter.stringFromNumber(newValue)
             history.text = brain.description + (brain.isPartialResult ? " ⋯" : " =")
         }
     }
@@ -57,7 +60,7 @@ class CalculatorViewController: UIViewController {
         
         userIsInTheMiddleOfTyping = true
     }
-    @IBAction func clear(sender: UIButton) {
+    @IBAction private func clear(sender: UIButton) {
         brain.clear()
         display.text = "0"
         history.text = "⋯"
