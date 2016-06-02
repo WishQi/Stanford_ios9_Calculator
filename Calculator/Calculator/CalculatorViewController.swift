@@ -21,7 +21,7 @@ class CalculatorViewController: UIViewController {
         }
     }
     
-    var userIsInTheMiddleOfFloatingPointNumber = false
+    private var userIsInTheMiddleOfFloatingPointNumber = false
     
     private var brain = CalculatorBrain()
     

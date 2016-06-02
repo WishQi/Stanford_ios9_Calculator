@@ -46,6 +46,12 @@ class CalculatorBrain {
         }
     }
     
+    var result: Double {
+        get {
+            return accumulator
+        }
+    }
+    
     private enum Operation {
         case Constant(Double)
         case UnaryOperation((Double) -> Double, (String) -> String)
@@ -79,6 +85,15 @@ class CalculatorBrain {
         "÷": Operation.BinaryOperation( /, {$0 + "÷" + $1}, 1 ),
         "=": Operation.Equals
     ]
+    
+    private struct pendingBinaryFunctionInfo {
+        var binaryFunction: (Double, Double) -> Double
+        var firstOperand: Double
+        var descriptionFunction: (String, String) -> String
+        var descriptionOperand: String
+    }
+    
+    private var pending: pendingBinaryFunctionInfo?
     
     func setOperand(operand: Double) {
         accumulator = operand
@@ -116,26 +131,11 @@ class CalculatorBrain {
         descriptionAccumulator = "0"
     }
     
-    private struct pendingBinaryFunctionInfo {
-        var binaryFunction: (Double, Double) -> Double
-        var firstOperand: Double
-        var descriptionFunction: (String, String) -> String
-        var descriptionOperand: String
-    }
-    
-    private var pending: pendingBinaryFunctionInfo?
-    
     private func executePendingBinaryOperation() {
         if pending != nil {
             accumulator = pending!.binaryFunction(pending!.firstOperand, accumulator)
             descriptionAccumulator = pending!.descriptionFunction(pending!.descriptionOperand, descriptionAccumulator)
             pending = nil
-        }
-    }
-    
-    var result: Double {
-        get {
-            return accumulator
         }
     }
     
