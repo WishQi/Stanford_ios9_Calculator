@@ -28,6 +28,8 @@ class CalculatorBrain {
         }
     }
     
+    private var internalProgram = [AnyObject]()
+    
     private var currentPrecedence = Int.max
     
     var description: String {
@@ -95,7 +97,29 @@ class CalculatorBrain {
     
     private var pending: pendingBinaryFunctionInfo?
     
+    
+    typealias PropertyList = AnyObject
+    
+    var program: PropertyList {
+        get {
+            return internalProgram
+        }
+        set {
+            clear()
+            if let arrayOfOps = newValue as? [AnyObject] {
+                for op in arrayOfOps {
+                    if let operand = op as? Double {
+                        setOperand(operand)
+                    } else if let operation = op as? String {
+                        performOperation(operation)
+                    }
+                }
+            }
+        }
+    }
+    
     func setOperand(operand: Double) {
+        internalProgram.append(operand)
         accumulator = operand
         let formatter = NSNumberFormatter()
         formatter.numberStyle = .DecimalStyle
@@ -104,6 +128,7 @@ class CalculatorBrain {
     }
     
     func performOperation(symbol: String) {
+        internalProgram.append(symbol)
         if let operation = operations[symbol] {
             switch operation {
             case .Constant(let value):
