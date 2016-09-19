@@ -30,6 +30,26 @@ class CalculatorBrain {
     
     private var internalProgram = [AnyObject]()
     
+    typealias PropertyList = AnyObject
+    
+    var program: PropertyList {
+        get {
+            return internalProgram
+        }
+        set {
+            clear()
+            if let arrayOfOps = newValue as? [AnyObject] {
+                for op in arrayOfOps {
+                    if let operand = op as? Double {
+                        setOperand(operand)
+                    } else if let operation = op as? String {
+                        performOperation(operation)
+                    }
+                }
+            }
+        }
+    }
+    
     private var currentPrecedence = Int.max
     
     var description: String {
@@ -97,27 +117,6 @@ class CalculatorBrain {
     
     private var pending: pendingBinaryFunctionInfo?
     
-    
-    typealias PropertyList = AnyObject
-    
-    var program: PropertyList {
-        get {
-            return internalProgram
-        }
-        set {
-            clear()
-            if let arrayOfOps = newValue as? [AnyObject] {
-                for op in arrayOfOps {
-                    if let operand = op as? Double {
-                        setOperand(operand)
-                    } else if let operation = op as? String {
-                        performOperation(operation)
-                    }
-                }
-            }
-        }
-    }
-    
     func setOperand(operand: Double) {
         internalProgram.append(operand)
         accumulator = operand
@@ -154,6 +153,13 @@ class CalculatorBrain {
         pending = nil
         accumulator = 0.0
         descriptionAccumulator = "0"
+    }
+    
+    func undo(){
+        if pending != nil {
+            pending = nil
+            internalProgram.removeLast()
+        }
     }
     
     private func executePendingBinaryOperation() {

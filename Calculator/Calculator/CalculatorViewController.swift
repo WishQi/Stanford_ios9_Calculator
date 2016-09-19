@@ -53,7 +53,7 @@ class CalculatorViewController: UIViewController {
         
         if userIsInTheMiddleOfTyping {
             let textCurrentlyInDisplay = display.text!
-            display!.text = textCurrentlyInDisplay + digit
+            display.text = textCurrentlyInDisplay + digit
         } else {
             display.text = digit
         }
@@ -67,6 +67,24 @@ class CalculatorViewController: UIViewController {
         userIsInTheMiddleOfTyping = false
     }
 
+    @IBAction func undo() {
+        if userIsInTheMiddleOfTyping {
+            if display.text != "" {
+                var currentDisplay = display.text!
+                currentDisplay.removeAtIndex(currentDisplay.endIndex.advancedBy(-1))
+                if currentDisplay == "" {
+                    display.text = "0"
+                    userIsInTheMiddleOfTyping = false
+                } else {
+                    display.text = currentDisplay
+                }
+            }
+        } else {
+            brain.undo()
+            history.text = brain.description
+        }
+    }
+    
     @IBAction private func performOperation(sender: UIButton) {
         
         if userIsInTheMiddleOfTyping {
